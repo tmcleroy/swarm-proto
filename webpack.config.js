@@ -32,10 +32,25 @@ module.exports = {
         ],
         loader: 'babel-loader',
         query: {
-          presets: ['es2015', 'stage-0']
+          presets: ['es2015', 'stage-0'],
+          plugins: ['lodash']
         }
       },
+      {
+        test: /\.(png|gif|jpg)$/,
+        loader: 'url'
+      }
     ]
   },
-  devtool: 'inline-source-map',
+  plugins: [
+    new webpack.optimize.LimitChunkCountPlugin({
+      maxChunks: 1
+    }),
+    new webpack.ProvidePlugin({
+      '_': 'lodash'
+    }),
+    new webpack.NoErrorsPlugin(),
+    new webpack.HotModuleReplacementPlugin()
+  ],
+  devtool: 'inline-source-map'
 };
