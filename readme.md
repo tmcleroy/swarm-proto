@@ -3,6 +3,7 @@
 ### run
 - npm install
 - npm start
+- open browser to localhost:8080
 
 
 ### custom setup
