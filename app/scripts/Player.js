@@ -7,7 +7,7 @@ export default class Player {
     this.game = sprite.game;
     this.width = sprite.width;
     this.height = sprite.height;
-    this.speed = 1;
+    this.speed = randFloat(1.5, 2.2);
     this.goal = _.find(this.game.world.children, child => child.key === 'goal');
   }
 
@@ -22,31 +22,21 @@ export default class Player {
     if (!this.isAtGoal()) {
       this.move({
         target: this.goal,
-        speed: randFloat(0.5, 1.5),
         axisTolerance: 5
       });
     }
   }
 
   move ({ target, direction = 1, speed = 1, axisTolerance = 0 }) {
-    let xDir = 0;
-    let yDir = 0;
-    const xDiff = Math.abs(target.position.x - this.position.x);
-    const yDiff = Math.abs(target.position.y - this.position.y);
-    xDir = xDiff > axisTolerance ?
-      (target.position.x < this.position.x ? -1 : 1) :
-      0;
-    yDir = yDiff > axisTolerance ?
-      (target.position.y < this.position.y ? -1 : 1) :
-      0;
+    const xDiff = target.position.x - this.position.x;
+    const yDiff = target.position.y - this.position.y;
 
-    if (direction === 1) {
-      this.position.x += (this.speed * speed) * xDir;
-      this.position.y += (this.speed * speed) * yDir;
-    } else if (direction === -1) {
-      this.position.x -= (this.speed * speed) * xDir;
-      this.position.y -= (this.speed * speed) * yDir;
-    }
+    const distance = Math.sqrt(Math.pow(xDiff, 2) + Math.pow(yDiff, 2));
+    const xDir = xDiff / distance;
+    const yDir = yDiff / distance;
+
+    this.position.x += (this.speed * speed) * xDir * direction;
+    this.position.y += (this.speed * speed) * yDir * direction;
   }
 
   willCollideWith ({ sprite, fuzziness = 3 }) {
@@ -58,7 +48,7 @@ export default class Player {
   moveAwayFromSiblings () {
     _.each(this.siblings, sibling => {
       if (this.willCollideWith({ sprite: sibling })) {
-        this.move({ direction: -1, target: sibling, speed: randFloat(1.9, 2.1) });
+        this.move({ direction: -1, target: sibling, speed: this.speed * 1.5 });
       }
     });
   }
