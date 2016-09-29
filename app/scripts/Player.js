@@ -1,6 +1,7 @@
 import { randFloat } from 'utils';
 
 export default class Player {
+
   constructor (sprite) {
     this.sprite = sprite;
     this.position = sprite.position;
@@ -8,7 +9,25 @@ export default class Player {
     this.width = sprite.width;
     this.height = sprite.height;
     this.speed = randFloat(1.5, 2.2);
-    this.goal = _.find(this.game.world.children, child => child.key === 'goal');
+
+    this.behaviors = [
+      {
+        conditions: [
+          () => false
+        ],
+        action: () => {
+          this.setGoal('gather', 'wood');
+        }
+      },
+      {
+        conditions: [
+          () => true
+        ],
+        action: () => {
+          this.setGoal('gather', 'stone');
+        }
+      }
+    ];
   }
 
   initialize () {
@@ -19,15 +38,34 @@ export default class Player {
     if (this.willCollideWithSiblings()) {
       this.moveAwayFromSiblings();
     }
-    if (!this.isAtGoal()) {
-      this.move({
-        target: this.goal,
-        axisTolerance: 5
-      });
-    }
+    this.processBehavior();
+    this.makeMove();
   }
 
-  move ({ target, direction = 1, speed = 1, axisTolerance = 0 }) {
+  makeMove () {
+    this.objective && this.move({ target: this.objective });
+  }
+
+  processBehavior () {
+    _.each(this.behaviors, behavior => {
+      _.every(behavior.conditions, condition => condition()) && behavior.action();
+    });
+  }
+
+  setGoal (action, target) {
+    const fxn = {
+      gather: (target) => {
+        this.objective = this.getSprite(target);
+      }
+    }[action];
+    fxn && fxn(target);
+  }
+
+  getSprite (key) {
+    return _.find(this.game.world.children, child => child.key === key);
+  }
+
+  move ({ target, direction = 1, speed = 1 }) {
     const xDiff = target.position.x - this.position.x;
     const yDiff = target.position.y - this.position.y;
 
@@ -39,24 +77,16 @@ export default class Player {
     this.position.y += (this.speed * speed) * yDir * direction;
   }
 
-  willCollideWith ({ sprite, fuzziness = 3 }) {
-    const xDiff = Math.abs(sprite.position.x - this.position.x);
-    const yDiff = Math.abs(sprite.position.y - this.position.y);
-    return (xDiff < this.width + fuzziness && yDiff < this.height + fuzziness);
-  }
-
-  moveAwayFromSiblings () {
-    _.each(this.siblings, sibling => {
-      if (this.willCollideWith({ sprite: sibling })) {
-        this.move({ direction: -1, target: sibling, speed: this.speed * 1.5 });
-      }
-    });
-  }
-
   isAtGoal (fuzziness = 5) {
     const xDiff = Math.abs(this.goal.position.x - this.position.x);
     const yDiff = Math.abs(this.goal.position.y - this.position.y);
     return xDiff < this.width + fuzziness && yDiff < this.height + fuzziness;
+  }
+
+  willCollideWith ({ sprite, fuzziness = 3 }) {
+    const xDiff = Math.abs(sprite.position.x - this.position.x);
+    const yDiff = Math.abs(sprite.position.y - this.position.y);
+    return (xDiff < this.width + fuzziness && yDiff < this.height + fuzziness);
   }
 
   willCollideWithSiblings () {
@@ -65,5 +95,13 @@ export default class Player {
       colliding = colliding || this.willCollideWith({ sprite: sibling });
     });
     return colliding;
+  }
+
+  moveAwayFromSiblings () {
+    _.each(this.siblings, sibling => {
+      if (this.willCollideWith({ sprite: sibling })) {
+        this.move({ direction: -1, target: sibling, speed: this.speed * 1.5 });
+      }
+    });
   }
 }

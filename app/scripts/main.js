@@ -4,6 +4,9 @@ import { CANVAS_HEIGHT, CANVAS_WIDTH, STAGE_COLOR } from 'config';
 import { randInt } from 'utils';
 import playerImg from 'assets/player.png';
 import diamondImg from 'assets/diamond.png';
+import dirtImg from 'assets/dirt.png';
+import woodImg from 'assets/wood.png';
+import stoneImg from 'assets/stone.png';
 import Player from 'Player';
 
 var game = new Phaser.Game(
@@ -18,19 +21,22 @@ window.game = game;
 let frame = 0;
 const frameRate = 60;
 const updatesPerSecond = 60;
-const numPlayers = 40;
-let goal = null;
-const goalSize = 32;
+const numPlayers = 10;
 const players = [];
 
 function preload () {
   game.load.image('player', playerImg);
   game.load.image('goal', diamondImg);
+  game.load.image('dirt', dirtImg);
+  game.load.image('wood', woodImg);
+  game.load.image('stone', stoneImg);
   game.stage.backgroundColor = STAGE_COLOR;
 }
 
 function create () {
-  placeGoal();
+  _.times(4, () => placeResource('dirt'));
+  _.times(4, () => placeResource('wood'));
+  _.times(4, () => placeResource('stone'));
   placePlayers();
 }
 
@@ -38,15 +44,7 @@ function update (one, two, three) {
   if (frame % Math.round((frameRate / updatesPerSecond)) === 0) {
     _.invokeMap(players, 'update');
   }
-  if (frame % 480 === 0) {
-    moveGoal();
-  }
   frame++;
-}
-
-function moveGoal () {
-  goal.position.x = randInt(goalSize, game.world.width) - goalSize;
-  goal.position.y = randInt(goalSize, game.world.height) - goalSize;
 }
 
 function placePlayers () {
@@ -61,6 +59,7 @@ function placePlayers () {
   _.invokeMap(players, 'initialize');
 }
 
-function placeGoal () {
-  goal = game.add.sprite(randInt(goalSize, game.world.width) - goalSize, randInt(goalSize, game.world.height) - goalSize, 'goal');
+function placeResource (name) {
+  const resourceSize = 32;
+  game.add.sprite(randInt(resourceSize, game.world.width) - resourceSize, randInt(resourceSize, game.world.height) - resourceSize, name);
 }
